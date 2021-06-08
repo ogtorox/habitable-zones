@@ -1,0 +1,66 @@
+import numpy as np
+import matplotlib.pyplot as plt 
+import pandas as pd
+stellarModel = open('hr.0F 1.5zsol', 'r')
+i =1 
+tstep = 0
+dataframe_hr = pd.read_table(stellarModel,delim_whitespace=True,names=np.arange(14)) 
+nrows = np.shape(dataframe_hr)[0]
+
+#Code reads in log(temperature) (T), log(luminosity/Lsol) (L), time in seconds (t), and stellar radius in cm (r).
+T_array_hr = []
+L_array_hr = []
+t_array_hr = [] r_array_hr = []
+for i in range(nrows):
+	if i%19 == 0: 
+	T_array_hr.append(dataframe_hr[8][i]) 
+	L_array_hr.append(dataframe_hr[7][i]) 
+	t_array_hr.append(dataframe_hr[2][i]) 
+	r_array_hr.append(dataframe_hr[4][i])
+	
+plt.plot (T_array_hr, L_array_hr) 
+plt.title ('Evolutionary Track 1.5 Zsol') 
+plt.xlabel ('log (L/Lsol)')
+plt.ylabel ('log (Teff)')
+plt.xlim (3.618,3.748)
+plt.show ()
+
+stellarModel.close()
+S_eff_sol_in = 1.107 
+S_eff_sol_out = 0.356 
+a_in = 1.332e-4
+a_out = 6.171e-5 
+b_in = 1.580e-8 
+b_out = 1.698e-9 
+c_in = -8.308e-12 
+c_out = -3.198e-12 
+d_in = -1.931e-15 
+d_out = -5.575e-16
+
+S_eff_in = [] 
+S_eff_out = []
+for x in T_array_hr:
+	T_star = 10**x
+	T_eff = T_star - 5780
+	S_eff_in.append(S_eff_sol_in + (a_in)*T_eff + (b_in)*T_eff**2 + (c_in)*T_eff**3 +
+	(d_in)*T_eff**4)
+	S_eff_out.append(S_eff_sol_out + (a_out)*T_eff + (b_out)*T_eff**2 +
+	(c_out)*T_eff**3 + (d_out)*T_eff**4) 
+	S_eff_in = np.array(S_eff_in) 
+	S_eff_out = np.array(S_eff_out)
+	
+L = []
+for x in L_array_hr:
+	L.append(10**x) 
+L = np.array(L)
+
+d_HZ_in = (L/S_eff_in)**(1/2) 
+d_HZ_out = (L/S_eff_out)**(1/2)
+
+plt.plot (t_array_hr, d_HZ_in, 'm', t_array_hr, d_HZ_out,'g') 
+plt.title("Inner and Outer HZ vs. Time (0F-1.5Zsol)") 
+plt.xlabel("time(s)")
+plt.ylabel("Distance (AU)")
+plt.fill_between(t_array_hr, d_HZ_in, d_HZ_out, color='blue', alpha='0.1') 
+plt.gca().legend(('inner','outer'))
+plt.show
